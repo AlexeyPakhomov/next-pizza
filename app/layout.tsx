@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 //import { Nunito } from 'next/font/google';
 import './globals.css';
-import Header from '@/components/shared/header';
+import { Header } from '@/components/shared';
 
 const nunito = localFont({
   src: './fonts/Nunito-VariableFont_wght.ttf',
