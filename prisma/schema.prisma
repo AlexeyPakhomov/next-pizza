@@ -1,0 +1,150 @@
+enum OrderStatus {
+  PENDING
+  SUCCESSED
+  CANCELLED
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id       Int      @id @default(autoincrement())
+  fullName String
+  email    String   @unique
+  password String
+  role     UserRole @default(USER)
+
+  // В случае если пользователь авторизируется через соц.сеть, то эти данные сохраняются в provider
+  provider   String?
+  providerId String?
+
+  cart             Cart? // One-to-One. У юзера может быть одна корзина.
+  order            Order[]
+  verificationCode VerificationCode?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  // One to Many. Связь категории с продуктами (пиццами). У категории может быть множество продуктов.
+  products Product[]
+}
+
+model Product {
+  id       Int    @id @default(autoincrement())
+  name     String
+  imageUrl String
+
+  // One to Many. Связь продукта с категорией. У продукта может быть одна категория.
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
+
+  ingredients Ingredient[] // Many to Many. У продукта может быть множество ингридиентов.
+  variants    ProductVariant[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductVariant {
+  id        Int  @id @default(autoincrement())
+  price     Int
+  size      Int?
+  pizzaType Int?
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
+
+  cartItems CartItem[]
+}
+
+model Ingredient {
+  id        Int        @id @default(autoincrement())
+  name      String
+  price     Int
+  imageUrl  String
+  products  Product[] // Many to Many. Ингридиент может присутствовать во множестве продуктов.
+  cartItems CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Cart {
+  id Int @id @default(autoincrement())
+
+  // One-to-One. У корзины может быть один юзер
+  user   User? @relation(fields: [userId], references: [id])
+  userId Int?  @unique
+
+  token       String
+  items       CartItem[]
+  totalAmount Int        @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+  id Int @id @default(autoincrement())
+
+  cart   Cart @relation(fields: [cartId], references: [id])
+  cartId Int
+
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
+  productVariantId Int
+
+  ingredients Ingredient[]
+  quantity    Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id     Int   @id @default(autoincrement())
+  user   User? @relation(fields: [userId], references: [id])
+  userId Int?
+
+  token       String
+  totalAmount Int
+  status      OrderStatus
+  paymentId   String?
+  items       Json // список позиций в формате JSON
+  fullName    String
+  email       String
+  phone       String
+  address     String
+  comment     String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model VerificationCode {
+  id Int @id @default(autoincrement())
+
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @unique
+
+  code String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, code]) // Если прописать @@unique, то проверка уникальности выглядит так userId && code. Если прописывать @unique по отдельности к каждому полю, то проверка userId || code
+}
