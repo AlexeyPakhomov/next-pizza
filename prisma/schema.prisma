@@ -10,9 +10,9 @@ enum UserRole {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL")
-  directUrl = env("POSTGRES_URL_NON_POOLING")
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL")
+  //directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 generator client {
@@ -25,6 +25,7 @@ model User {
   email    String   @unique
   password String
   role     UserRole @default(USER)
+  verified DateTime @default(now())
 
   // В случае если пользователь авторизируется через соц.сеть, то эти данные сохраняются в provider
   provider   String?
