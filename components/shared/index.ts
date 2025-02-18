@@ -1,3 +1,4 @@
+export { SearchInput } from './search-input';
 export { RangeSlider } from './range-slider';
 export { FilterCheckbox } from './filter-checkbox';
 export { Filters } from './filters';
